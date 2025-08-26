@@ -1,6 +1,3 @@
-A sample command-line application with an entrypoint in `bin/`, library code
-in `lib/`, and example unit test in `test/`.
-
 # Group members
 ### 1.6631501071 Senior Dev / Duty : Set template for Junior Dev
 ### 2.6631501073 Junior Dev / Duty : All expense, Delete expense
