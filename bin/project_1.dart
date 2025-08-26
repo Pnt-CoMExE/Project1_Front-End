@@ -109,7 +109,30 @@ Future<void> menu(int userId, String username) async {
         break;
       case '2':
         print("------------- Today's expense -------------");
-        // Add code here
+          final todayExpensesUrl = Uri.parse('http://localhost:3000/expenses/$userId/today',);
+        final response = await http.get(todayExpensesUrl);
+
+        if (response.statusCode == 200) {
+          final jsonResult = json.decode(response.body) as Map<String, dynamic>;
+
+          final expenses = jsonResult['expenses'] as List<dynamic>;
+          final total = jsonResult['total'];
+
+          if (expenses.isEmpty) {
+            print("No expenses for today.");
+          } else {
+            for (var exp in expenses) {
+              final dt = DateTime.tryParse(exp['date'].toString());
+              final dtLocal = dt?.toLocal();
+              print(
+                "${exp['id']}. ${exp['item']} : ${exp['paid']}฿ @ ${dtLocal ?? exp['date']}",
+              );
+            }
+            print("Total expenses = $total฿");
+          }
+        } else {
+          print("Failed to fetch today's expenses");
+        }
         break;
       case '3':
         print("------------- Search expense -------------");
@@ -117,12 +140,42 @@ Future<void> menu(int userId, String username) async {
         break;
       case '4':
         print("------------- Add new expense -------------");
-        // Add code here
-        break;
+          final addUrl = Uri.parse('http://localhost:3000/expenses/add/$userId',);
+        stdout.write("Item: ");
+          String? item = stdin.readLineSync()?.trim();
+          stdout.write("Paid: ");
+          String? paid = stdin.readLineSync()?.trim();
+           if (item == null||  item.isEmpty ||  paid == null || paid.isEmpty){
+            print("Invalid input\n");
+            continue;
+          }
+
+          final paidAmount = int.tryParse(paid);
+          if (paidAmount == null) {
+            print("Please input a number\n");
+            continue;
+          }
+
+          final addBody = jsonEncode({
+            "user_id": userId,
+            "item": item,
+            "paid": paidAmount,
+          });
+
+          final addResponse = await http.post(addUrl,
+            headers: {"Content-Type": "application/json"},
+            body: addBody,
+          );
+
+          if (addResponse.statusCode == 201) {
+            print("Inserted!\n");
+          } else {
+            print("Failed to add expense. Error: ${addResponse.statusCode}\n");
+          }
+            break;
       case '5':
         print("------------- Delete an expense -------------");
         // Add code here
-        //test
         break;
       case '6':
         print("------ Bye ------");
