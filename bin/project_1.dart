@@ -59,7 +59,31 @@ Future<void> menu(int userId, String username) async {
         break;
       case '2':
         print("------------- Today's expense -------------");
-          // Add code here
+          final todayExpensesUrl = Uri.parse('http://localhost:3000/expenses/$userId/today',);
+        final response = await http.get(todayExpensesUrl);
+
+        if (response.statusCode == 200) {
+          final jsonResult = json.decode(response.body) as Map<String, dynamic>;
+
+          final expenses = jsonResult['expenses'] as List<dynamic>;
+          final total = jsonResult['total'];
+
+          if (expenses.isEmpty) {
+            print("No expenses for today.");
+          } else {
+            for (var exp in expenses) {
+              final dt = DateTime.tryParse(exp['date'].toString());
+              final dtLocal = dt?.toLocal();
+              print(
+                "${exp['id']}. ${exp['item']} : ${exp['paid']}฿ @ ${dtLocal ?? exp['date']}",
+              );
+            }
+            print("Total expenses = ${total}฿");
+          }
+        } else {
+          print("Failed to fetch today's expenses");
+        }
+
         break;
       case '3':
         print("------------- Search expense -------------");
