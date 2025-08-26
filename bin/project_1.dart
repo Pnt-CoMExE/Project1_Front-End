@@ -68,22 +68,37 @@ Future<void> menu(int userId, String username) async {
               if (expenses.isEmpty) {
                 print("No expenses found.");
               } else {
-                double total = 0; // ถ้ามีข้อมูลใน expense ในรายการจะประกาศตัวแปร total รวมเงินครับ
+                double total =
+                    0; // ถ้ามีข้อมูลใน expense ในรายการจะประกาศตัวแปร total รวมเงินครับ
+
+                expenses.sort((a, b) {
+                  if (a['id'] > b['id']) {
+                    return 1; // ถ้า a มากกว่า b จะให้ a อยู่หลัง b ตะได้เรียงจากน้อยไปมากครับ
+                  } else if (a['id'] < b['id']) {
+                    return -1; // ถ้า a น้อยกว่า b จะให้ a อยู่ก่อน b จะได้เรียงจากน้อยไปมากครับ
+                  } else {
+                    return 0;
+                  }
+                }); // sort id เรียงจากน้อยไปมากครับ
 
                 for (var exp in expenses) {
                   String date = exp['date'].toString(); // วนลูปผ่านทุก expense ใน list //ดึงข้อมูลจาก object expense แต่ละอย่างครับ และ ดึงค่า date จาก object
-                  String item = exp['item']; 
+                  String item = exp['item'];
                   String paid = exp['paid'].toString();
 
                   print("${exp['id']}. $item : $paid ฿ : $date");
 
-                  total += double.tryParse(paid) ?? 0; //?? 0 คือ ถ้สแปลงไม่ได้ให้ใช้ค่าเป็น 0 แทนนะครับผม และ ตรง double.tryParse(paid) คือแปลง string เป็น double ครับ
+                  total +=
+                      double.tryParse(paid) ??
+                      0; //?? 0 คือ ถ้สแปลงไม่ได้ให้ใช้ค่าเป็น 0 แทนนะครับผม และ ตรง double.tryParse(paid) คือแปลง string เป็น double ครับ
                 }
 
                 print("Total expenses = ${total.toStringAsFixed(0)} ฿");
               }
             } else {
-              print("Failed to fetch expenses: ${response.body}"); // ถ้าไม่เรียกใช้ 200 จะเรียกไม่สำเร็จค้าบบ
+              print(
+                "Failed to fetch expenses: ${response.body}",
+              ); // ถ้าไม่เรียกใช้ 200 จะเรียกไม่สำเร็จค้าบบ
             }
           } catch (err) {
             print("Error connecting to server: $err");
