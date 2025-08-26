@@ -55,7 +55,57 @@ Future<void> menu(int userId, String username) async {
     switch (choice) {
       case '1':
         print("------------- All expenses -------------");
-          // Add code here
+        // Add code here
+        // ขออนุญาตเขียนไว้อ่านนะครับผม
+        Future<void> allExpenses(int userId) async {
+          final url = Uri.parse('http://localhost:3000/expenses/$userId');
+          try {
+            final response = await http.get(url);
+
+            if (response.statusCode == 200) {
+              List<dynamic> expenses = json.decode(response.body);
+
+              if (expenses.isEmpty) {
+                print("No expenses found.");
+              } else {
+                double total =
+                    0; // ถ้ามีข้อมูลใน expense ในรายการจะประกาศตัวแปร total รวมเงินครับ
+
+                expenses.sort((a, b) {
+                  if (a['id'] > b['id']) {
+                    return 1; // ถ้า a มากกว่า b จะให้ a อยู่หลัง b ตะได้เรียงจากน้อยไปมากครับ
+                  } else if (a['id'] < b['id']) {
+                    return -1; // ถ้า a น้อยกว่า b จะให้ a อยู่ก่อน b จะได้เรียงจากน้อยไปมากครับ
+                  } else {
+                    return 0;
+                  }
+                }); // sort id เรียงจากน้อยไปมากครับ
+
+                for (var exp in expenses) {
+                  String date = exp['date'].toString(); // วนลูปผ่านทุก expense ใน list //ดึงข้อมูลจาก object expense แต่ละอย่างครับ และ ดึงค่า date จาก object
+                  String item = exp['item'];
+                  String paid = exp['paid'].toString();
+
+                  print("${exp['id']}. $item : $paid ฿ : $date");
+
+                  total +=
+                      double.tryParse(paid) ??
+                      0; //?? 0 คือ ถ้สแปลงไม่ได้ให้ใช้ค่าเป็น 0 แทนนะครับผม และ ตรง double.tryParse(paid) คือแปลง string เป็น double ครับ
+                }
+
+                print("Total expenses = ${total.toStringAsFixed(0)} ฿");
+              }
+            } else {
+              print(
+                "Failed to fetch expenses: ${response.body}",
+              ); // ถ้าไม่เรียกใช้ 200 จะเรียกไม่สำเร็จค้าบบ
+            }
+          } catch (err) {
+            print("Error connecting to server: $err");
+          }
+        }
+
+        await allExpenses(userId);
         break;
       case '2':
         print("------------- Today's expense -------------");
@@ -83,11 +133,10 @@ Future<void> menu(int userId, String username) async {
         } else {
           print("Failed to fetch today's expenses");
         }
-
         break;
       case '3':
         print("------------- Search expense -------------");
-          // Add code here
+        // Add code here
         break;
       case '4':
         print("------------- Add new expense -------------");
@@ -123,11 +172,10 @@ Future<void> menu(int userId, String username) async {
           } else {
             print("Failed to add expense. Error: ${addResponse.statusCode}\n");
           }
-
+            break;
       case '5':
         print("------------- Delete an expense -------------");
-          // Add code here
-          //test
+        // Add code here
         break;
       case '6':
         print("------ Bye ------");
