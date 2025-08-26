@@ -78,7 +78,7 @@ Future<void> menu(int userId, String username) async {
                 "${exp['id']}. ${exp['item']} : ${exp['paid']}฿ @ ${dtLocal ?? exp['date']}",
               );
             }
-            print("Total expenses = ${total}฿");
+            print("Total expenses = $total฿");
           }
         } else {
           print("Failed to fetch today's expenses");
