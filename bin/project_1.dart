@@ -96,10 +96,10 @@ Future<void> menu(int userId, String username) async {
               final result = json.decode(response.body); //แปลง Json เป็น Dart object ครับ
               print("👍 ${result['message']}");
             } else {
-              print("🖕 Failed to delete expense: ${response.body}");
+              print("😡 Failed to delete expense: ${response.body}");
             }
           } catch (err) {
-            print("🖕 Error connecting to server: $err");
+            print("😡 Error connecting to server: $err");
           }
         }
 
