@@ -73,7 +73,7 @@ Future<void> menu(int userId, String username) async {
           stdout.write("Paid: ");
           String? paid = stdin.readLineSync()?.trim();
            if (item == null||  item.isEmpty ||  paid == null || paid.isEmpty){
-            print("");
+            print("Invalid input\n");
             continue;
           }
 
