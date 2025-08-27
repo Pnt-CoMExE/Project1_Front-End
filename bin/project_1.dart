@@ -55,11 +55,84 @@ Future<void> menu(int userId, String username) async {
     switch (choice) {
       case '1':
         print("------------- All expenses -------------");
-          // Add code here
+        // Add code here
+        // ขออนุญาตเขียนไว้อ่านนะครับผม
+        Future<void> allExpenses(int userId) async {
+          final url = Uri.parse('http://localhost:3000/expenses/$userId');
+          try {
+            final response = await http.get(url);
+
+            if (response.statusCode == 200) {
+              List<dynamic> expenses = json.decode(response.body);
+
+              if (expenses.isEmpty) {
+                print("No expenses found.");
+              } else {
+                double total =
+                    0; // ถ้ามีข้อมูลใน expense ในรายการจะประกาศตัวแปร total รวมเงินครับ
+
+                expenses.sort((a, b) {
+                  if (a['id'] > b['id']) {
+                    return 1; // ถ้า a มากกว่า b จะให้ a อยู่หลัง b ตะได้เรียงจากน้อยไปมากครับ
+                  } else if (a['id'] < b['id']) {
+                    return -1; // ถ้า a น้อยกว่า b จะให้ a อยู่ก่อน b จะได้เรียงจากน้อยไปมากครับ
+                  } else {
+                    return 0;
+                  }
+                }); // sort id เรียงจากน้อยไปมากครับ
+
+                for (var exp in expenses) {
+                  String date = exp['date'].toString(); // วนลูปผ่านทุก expense ใน list //ดึงข้อมูลจาก object expense แต่ละอย่างครับ และ ดึงค่า date จาก object
+                  String item = exp['item'];
+                  String paid = exp['paid'].toString();
+
+                  print("${exp['id']}. $item : $paid ฿ : $date");
+
+                  total +=
+                      double.tryParse(paid) ??
+                      0; //?? 0 คือ ถ้สแปลงไม่ได้ให้ใช้ค่าเป็น 0 แทนนะครับผม และ ตรง double.tryParse(paid) คือแปลง string เป็น double ครับ
+                }
+
+                print("Total expenses = ${total.toStringAsFixed(0)} ฿");
+              }
+            } else {
+              print(
+                "Failed to fetch expenses: ${response.body}",
+              ); // ถ้าไม่เรียกใช้ 200 จะเรียกไม่สำเร็จค้าบบ
+            }
+          } catch (err) {
+            print("Error connecting to server: $err");
+          }
+        }
+
+        await allExpenses(userId);
         break;
       case '2':
         print("------------- Today's expense -------------");
-          // Add code here
+          final todayExpensesUrl = Uri.parse('http://localhost:3000/expenses/$userId/today',);
+        final response = await http.get(todayExpensesUrl);
+
+        if (response.statusCode == 200) {
+          final jsonResult = json.decode(response.body) as Map<String, dynamic>;
+
+          final expenses = jsonResult['expenses'] as List<dynamic>;
+          final total = jsonResult['total'];
+
+          if (expenses.isEmpty) {
+            print("No expenses for today.");
+          } else {
+            for (var exp in expenses) {
+              final dt = DateTime.tryParse(exp['date'].toString());
+              final dtLocal = dt?.toLocal();
+              print(
+                "${exp['id']}. ${exp['item']} : ${exp['paid']}฿ @ ${dtLocal ?? exp['date']}",
+              );
+            }
+            print("Total expenses = $total฿");
+          }
+        } else {
+          print("Failed to fetch today's expenses");
+        }
         break;
       case '3':
         print("------------- Search expense -------------");
@@ -94,12 +167,73 @@ Future<void> menu(int userId, String username) async {
         break;
       case '4':
         print("------------- Add new expense -------------");
-          // Add code here
-        break;
+          final addUrl = Uri.parse('http://localhost:3000/expenses/add/$userId',);
+        stdout.write("Item: ");
+          String? item = stdin.readLineSync()?.trim();
+          stdout.write("Paid: ");
+          String? paid = stdin.readLineSync()?.trim();
+           if (item == null||  item.isEmpty ||  paid == null || paid.isEmpty){
+            print("Invalid input\n");
+            continue;
+          }
+
+          final paidAmount = int.tryParse(paid);
+          if (paidAmount == null) {
+            print("Please input a number\n");
+            continue;
+          }
+
+          final addBody = jsonEncode({
+            "user_id": userId,
+            "item": item,
+            "paid": paidAmount,
+          });
+
+          final addResponse = await http.post(addUrl,
+            headers: {"Content-Type": "application/json"},
+            body: addBody,
+          );
+
+          if (addResponse.statusCode == 201) {
+            print("Inserted!\n");
+          } else {
+            print("Failed to add expense. Error: ${addResponse.statusCode}\n");
+          }
+            break;
       case '5':
         print("------------- Delete an expense -------------");
           // Add code here
-          //test
+          Future<void> deleteExpense(int userId) async {
+          print("Enter expense ID to delete:"); //ฟังก์ชั่นที่เขียนจะทำงานแบบ async และ ไม่คืนค่า
+          String? input = stdin.readLineSync()?.trim(); // trim คือ ตัดช่องว่างออกถ้ามันมีช่องว่าง
+
+          if (input == null || input.isEmpty) {
+            print("Invalid input"); //ดูว่า input เป็น ว่างเปล่า ถ้าใช่จะ error
+            return;
+          }
+
+          int? expenseId = int.tryParse(input); //แปลง String เป็น int ครับ และ int? คือ อนุญาตให้เป็นค่าว่างครับ
+          if (expenseId == null) {
+            print("Please enter a valid number");
+            return;
+          }
+
+          final url = Uri.parse('http://localhost:3000/expenses/$expenseId');
+          try {
+            final response = await http.delete(url); //ส่ง HTTP DELETE request ไปยัง URL ที่กำหนดครับ
+
+            if (response.statusCode == 200) {
+              final result = json.decode(response.body); //แปลง Json เป็น Dart object ครับ
+              print("👍 ${result['message']}");
+            } else {
+              print("😡 Failed to delete expense: ${response.body}");
+            }
+          } catch (err) {
+            print("😡 Error connecting to server: $err");
+          }
+        }
+
+        await deleteExpense(userId);
         break;
       case '6':
         print("------ Bye ------");
